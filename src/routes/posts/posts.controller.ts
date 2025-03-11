@@ -11,12 +11,12 @@ export class PostsController {
   }
 
   @Get(':id')
-  getPost(@Param('id') id: string) {
+  getPost(@Param('id') id: number) {
     return this.postsService.getPost(id)
   }
 
   @Post()
-  createPost(@Body() body: any): any {
+  createPost(@Body() body: { title: string; content: string }) {
     return this.postsService.createPost(body)
   }
 
