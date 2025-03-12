@@ -8,7 +8,7 @@ import { AuthModule } from './routes/auth/auth.module'
 import { PostsModule } from './routes/posts/posts.module'
 
 @Module({
-  imports: [PostsModule, SharedModule, AuthModule],
+  imports: [SharedModule, PostsModule, AuthModule],
   controllers: [AppController],
   providers: [
     AppService,
