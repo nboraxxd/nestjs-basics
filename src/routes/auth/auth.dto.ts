@@ -47,3 +47,14 @@ export class RegisterResDTO extends SuccessResDTO<RegisterData> {
     Object.assign(this, partial)
   }
 }
+
+export class RefreshTokenBodyDTO {
+  @IsString({ message: 'Token không hợp lệ' })
+  refreshToken: string
+}
+
+export class RefreshTokenResDTO extends LoginResDTO {
+  constructor(partial: Partial<RefreshTokenResDTO>) {
+    super(partial)
+  }
+}

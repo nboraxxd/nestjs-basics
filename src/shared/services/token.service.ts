@@ -1,8 +1,12 @@
-import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
+import { Injectable } from '@nestjs/common'
+
+import omitBy from 'lodash/omitBy'
+import { v7 as uuidv7 } from 'uuid'
+import isUndefined from 'lodash/isUndefined'
+
 import envConfig from 'src/shared/config'
 import { TokenPayload } from 'src/shared/types/jwt.type'
-import { v7 as uuidv7 } from 'uuid'
 
 @Injectable()
 export class TokenService {
@@ -19,14 +23,17 @@ export class TokenService {
     )
   }
 
-  signRefreshToken(payload: { userId: number }) {
+  signRefreshToken(payload: { userId: number; exp?: number }) {
     return this.jwtService.signAsync(
-      { ...payload, _id: uuidv7() },
-      {
-        algorithm: 'HS256',
-        secret: envConfig.REFRESH_TOKEN_SECRET,
-        expiresIn: envConfig.REFRESH_TOKEN_EXPIRES_IN,
-      }
+      omitBy({ ...payload, _id: uuidv7() }, isUndefined),
+      omitBy(
+        {
+          algorithm: 'HS256',
+          secret: envConfig.REFRESH_TOKEN_SECRET,
+          expiresIn: !payload.exp ? envConfig.REFRESH_TOKEN_EXPIRES_IN : undefined,
+        },
+        isUndefined
+      )
     )
   }
 

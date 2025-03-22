@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
-import { Injectable, UnprocessableEntityException } from '@nestjs/common'
+import { JsonWebTokenError } from '@nestjs/jwt'
+import { Injectable, UnprocessableEntityException, UnauthorizedException } from '@nestjs/common'
 
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
@@ -13,6 +14,35 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenService
   ) {}
+
+  async generateTokens(payload: { userId: number }) {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.signAccessToken(payload),
+      this.tokenService.signRefreshToken(payload),
+    ])
+
+    return { accessToken, refreshToken }
+  }
+
+  async insertRefreshToken(token: string) {
+    const refreshTokenPayload = this.tokenService.decodeToken(token)
+
+    try {
+      await this.prismaService.refreshToken.create({
+        data: {
+          token,
+          userId: refreshTokenPayload.userId,
+          expiresAt: new Date(refreshTokenPayload.exp * 1000),
+        },
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new UnauthorizedException('Duplicate refresh token')
+      } else {
+        throw error
+      }
+    }
+  }
 
   async register({ name, email, password }: RegisterBodyDTO) {
     try {
@@ -50,25 +80,37 @@ export class AuthService {
 
     const token = await this.generateTokens({ userId: user.id })
 
+    await this.insertRefreshToken(token.refreshToken)
+
     return token
   }
 
-  async generateTokens(payload: { userId: number }) {
-    const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.signAccessToken(payload),
-      this.tokenService.signRefreshToken(payload),
-    ])
+  async refreshToken({ refreshToken }: { refreshToken: string }) {
+    try {
+      const tokenPayload = await this.tokenService.verifyRefreshToken(refreshToken)
 
-    const refreshTokenPayload = this.tokenService.decodeToken(refreshToken)
+      await this.prismaService.refreshToken.findUniqueOrThrow({
+        where: { token: refreshToken },
+      })
 
-    await this.prismaService.refreshToken.create({
-      data: {
-        token: refreshToken,
-        userId: payload.userId,
-        expiresAt: new Date(refreshTokenPayload.exp * 1000),
-      },
-    })
+      const [newAccessToken, newRefreshToken] = await Promise.all([
+        this.tokenService.signAccessToken({ userId: tokenPayload.userId }),
+        this.tokenService.signRefreshToken({ userId: tokenPayload.userId, exp: tokenPayload.exp }),
+      ])
 
-    return { accessToken, refreshToken }
+      await Promise.all([
+        this.prismaService.refreshToken.delete({ where: { token: refreshToken } }),
+        this.insertRefreshToken(newRefreshToken),
+      ])
+
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken }
+    } catch (error) {
+      if (error instanceof JsonWebTokenError) {
+        throw new UnauthorizedException(error.message)
+      } else if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new UnauthorizedException('Refresh token is invalid')
+      }
+      throw error
+    }
   }
 }
