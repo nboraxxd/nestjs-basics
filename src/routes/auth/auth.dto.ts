@@ -1,11 +1,13 @@
 import { Exclude, Type } from 'class-transformer'
-import { IsEmail, IsString } from 'class-validator'
+import { IsEmail, IsString, Length } from 'class-validator'
+import { Match } from 'src/shared/decorators/custom-validator.decorator'
 import { SuccessResDTO } from 'src/shared/shared.dto'
 
 export class LoginBodyDTO {
   @IsEmail({}, { message: 'Email không hợp lệ' })
   email: string
-  @IsString({ message: 'Mật khẩu không hợp lệ' })
+  @IsString({ message: 'Mật khẩu không đúng định dạng' })
+  @Length(6, 20, { message: 'Mật khẩu phải từ 6 đến 20 ký tự' })
   password: string
 }
 
@@ -21,7 +23,9 @@ export class LoginResDTO {
 export class RegisterBodyDTO extends LoginBodyDTO {
   @IsString({ message: 'Tên không hợp lệ' })
   name: string
-  @IsString({ message: 'Mật khẩu không hợp lệ' })
+
+  @IsString({ message: 'Mật khẩu không đúng định dạng' })
+  @Match('password', { message: 'Mật khẩu không khớp' })
   confirmPassword: string
 }
 
