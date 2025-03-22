@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client'
 import { JsonWebTokenError } from '@nestjs/jwt'
 import { Injectable, UnprocessableEntityException, UnauthorizedException } from '@nestjs/common'
 
@@ -6,6 +5,7 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { LoginBodyDTO, RegisterBodyDTO } from 'src/routes/auth/auth.dto'
 import { TokenService } from 'src/shared/services/token.service'
+import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helper'
 
 @Injectable()
 export class AuthService {
@@ -36,7 +36,7 @@ export class AuthService {
         },
       })
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (isUniqueConstraintPrismaError(error)) {
         throw new UnauthorizedException('Duplicate refresh token')
       } else {
         throw error
@@ -58,7 +58,7 @@ export class AuthService {
 
       return user
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (isUniqueConstraintPrismaError(error)) {
         throw new UnprocessableEntityException([{ field: 'email', message: 'Email already exists' }])
       }
       throw error
@@ -107,7 +107,7 @@ export class AuthService {
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
         throw new UnauthorizedException(error.message)
-      } else if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      } else if (isNotFoundPrismaError(error)) {
         throw new UnauthorizedException('Refresh token is invalid')
       }
       throw error
