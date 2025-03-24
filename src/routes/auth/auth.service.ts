@@ -56,7 +56,11 @@ export class AuthService {
         },
       })
 
-      return user
+      const token = await this.generateTokens({ userId: user.id })
+
+      await this.insertRefreshToken(token.refreshToken)
+
+      return token
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw new UnprocessableEntityException([{ field: 'email', message: 'Email already exists' }])

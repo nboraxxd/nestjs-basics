@@ -1,7 +1,5 @@
-import { Exclude, Type } from 'class-transformer'
 import { IsEmail, IsString, Length } from 'class-validator'
 import { Match } from 'src/shared/decorators/custom-validator.decorator'
-import { SuccessResDTO } from 'src/shared/shared.dto'
 
 export class LoginBodyDTO {
   @IsEmail({}, { message: 'Email không hợp lệ' })
@@ -29,26 +27,9 @@ export class RegisterBodyDTO extends LoginBodyDTO {
   confirmPassword: string
 }
 
-class RegisterData {
-  id: number
-  email: string
-  name: string
-  @Exclude() password: string
-  createdAt: Date
-  updatedAt: Date
-
-  constructor(partial: Partial<RegisterData>) {
-    Object.assign(this, partial)
-  }
-}
-
-export class RegisterResDTO extends SuccessResDTO<RegisterData> {
-  @Type(() => RegisterData)
-  declare data: RegisterData
-
+export class RegisterResDTO extends LoginResDTO {
   constructor(partial: Partial<RegisterResDTO>) {
     super(partial)
-    Object.assign(this, partial)
   }
 }
 
