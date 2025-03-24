@@ -1,11 +1,10 @@
-import { JsonWebTokenError } from '@nestjs/jwt'
 import { Injectable, UnprocessableEntityException, UnauthorizedException } from '@nestjs/common'
 
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { LoginBodyDTO, RegisterBodyDTO } from 'src/routes/auth/auth.dto'
 import { TokenService } from 'src/shared/services/token.service'
-import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helper'
+import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helper'
 
 @Injectable()
 export class AuthService {
@@ -109,7 +108,7 @@ export class AuthService {
 
       return { accessToken: newAccessToken, refreshToken: newRefreshToken }
     } catch (error) {
-      if (error instanceof JsonWebTokenError) {
+      if (isJsonWebTokenError(error)) {
         throw new UnauthorizedException(error.message)
       } else if (isNotFoundPrismaError(error)) {
         throw new UnauthorizedException('Refresh token is invalid')
