@@ -26,6 +26,8 @@ class ConfigSchema {
   REFRESH_TOKEN_SECRET: string
   @IsString()
   REFRESH_TOKEN_EXPIRES_IN: string
+  @IsString()
+  SECRET_API_KEY: string
 }
 
 // enableImplicitConversion: true is required to convert string values to their respective types
@@ -44,7 +46,7 @@ if (errorArray.length > 0) {
     }
   })
 
-  throw errors
+  throw new Error(`Validation failed: ${JSON.stringify(errors)}`)
 }
 
 const envConfig = configServer
