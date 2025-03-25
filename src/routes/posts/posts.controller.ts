@@ -1,22 +1,27 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common'
 
-import { Auth } from 'src/shared/decorators/auth.decorator'
-import { PostsService } from 'src/routes/posts/posts.service'
-import { AuthType, ConditionGuard } from 'src/shared/constants/auth.constant'
+import { MessageResDTO } from 'src/shared/shared.dto'
+import { TokenPayload } from 'src/shared/types/jwt.type'
 import { AccessTokenGuard } from 'src/shared/guards/access-token.guard'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
-import { TokenPayload } from 'src/shared/types/jwt.type'
-import { CreatePostBodyDTO } from 'src/routes/posts/posts.dto'
-import { MessageResDTO } from 'src/shared/shared.dto'
+import { PostsService } from 'src/routes/posts/posts.service'
+import { CreatePostBodyDTO, GetMyPostItemDTO, GetPostItemDTO } from 'src/routes/posts/posts.dto'
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Auth([AuthType.Bearer, AuthType.ApiKey], { condition: ConditionGuard.And })
   @Get()
-  getPosts() {
-    return this.postsService.getPosts()
+  async getPosts() {
+    const posts = await this.postsService.getPosts()
+    return posts.map((post) => new GetPostItemDTO(post))
+  }
+
+  @Get('me')
+  @UseGuards(AccessTokenGuard)
+  async getMyPosts(@ActiveUser('userId') userId: TokenPayload['userId']) {
+    const posts = await this.postsService.getMyPosts(userId)
+    return posts.map((post) => new GetMyPostItemDTO(post))
   }
 
   @Get(':id')
