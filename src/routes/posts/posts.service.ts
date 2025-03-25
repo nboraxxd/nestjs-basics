@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { CreatePostBodyDTO } from 'src/routes/posts/posts.dto'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { MessageResDTO } from 'src/shared/shared.dto'
+import { TokenPayload } from 'src/shared/types/jwt.type'
 
 @Injectable()
 export class PostsService {
@@ -13,14 +16,20 @@ export class PostsService {
     return this.prismaService.post.findUnique({ where: { id } })
   }
 
-  createPost(body: { title: string; content: string }) {
-    return this.prismaService.post.create({
-      data: {
-        title: body.title,
-        content: body.content,
-        authorId: 1,
-      },
-    })
+  async createPost(body: CreatePostBodyDTO, userId: TokenPayload['userId']): Promise<MessageResDTO> {
+    try {
+      await this.prismaService.post.create({
+        data: {
+          title: body.title,
+          content: body.content,
+          authorId: userId,
+        },
+      })
+
+      return { message: 'Post created successfully' }
+    } catch {
+      throw new InternalServerErrorException('Failed to create post')
+    }
   }
 
   updatePost(id: string, body: any): any {
