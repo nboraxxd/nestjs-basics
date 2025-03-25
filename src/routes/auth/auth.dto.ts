@@ -43,3 +43,8 @@ export class RefreshTokenResDTO extends LoginResDTO {
     super(partial)
   }
 }
+
+export class LogoutBodyDTO {
+  @IsString({ message: 'Token không hợp lệ' })
+  refreshToken: string
+}

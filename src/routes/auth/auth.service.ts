@@ -2,9 +2,10 @@ import { Injectable, UnprocessableEntityException, UnauthorizedException } from 
 
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { LoginBodyDTO, RegisterBodyDTO } from 'src/routes/auth/auth.dto'
+import { LoginBodyDTO, LogoutBodyDTO, RefreshTokenBodyDTO, RegisterBodyDTO } from 'src/routes/auth/auth.dto'
 import { TokenService } from 'src/shared/services/token.service'
 import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helper'
+import { MessageResDTO } from 'src/shared/shared.dto'
 
 @Injectable()
 export class AuthService {
@@ -88,7 +89,7 @@ export class AuthService {
     return token
   }
 
-  async refreshToken({ refreshToken }: { refreshToken: string }) {
+  async refreshToken({ refreshToken }: RefreshTokenBodyDTO) {
     try {
       const tokenPayload = await this.tokenService.verifyRefreshToken(refreshToken)
 
@@ -107,6 +108,23 @@ export class AuthService {
       ])
 
       return { accessToken: newAccessToken, refreshToken: newRefreshToken }
+    } catch (error) {
+      if (isJsonWebTokenError(error)) {
+        throw new UnauthorizedException(error.message)
+      } else if (isNotFoundPrismaError(error)) {
+        throw new UnauthorizedException('Refresh token is invalid')
+      }
+      throw error
+    }
+  }
+
+  async logout({ refreshToken }: LogoutBodyDTO): Promise<MessageResDTO> {
+    try {
+      await this.tokenService.verifyRefreshToken(refreshToken)
+
+      await this.prismaService.refreshToken.delete({ where: { token: refreshToken } })
+
+      return { message: 'Logout successfully' }
     } catch (error) {
       if (isJsonWebTokenError(error)) {
         throw new UnauthorizedException(error.message)

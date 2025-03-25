@@ -3,11 +3,13 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
 import {
   LoginBodyDTO,
   LoginResDTO,
+  LogoutBodyDTO,
   RefreshTokenBodyDTO,
   RefreshTokenResDTO,
   RegisterBodyDTO,
   RegisterResDTO,
 } from 'src/routes/auth/auth.dto'
+import { MessageResDTO } from 'src/shared/shared.dto'
 import { AuthService } from 'src/routes/auth/auth.service'
 
 @Controller('auth')
@@ -35,5 +37,13 @@ export class AuthController {
     const result = await this.authService.refreshToken(body)
 
     return new RefreshTokenResDTO(result)
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Body() body: LogoutBodyDTO) {
+    const result = await this.authService.logout(body)
+
+    return new MessageResDTO(result)
   }
 }
