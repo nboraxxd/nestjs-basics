@@ -1,8 +1,8 @@
 import fs from 'fs'
 import path from 'path'
-import { IsNumber, IsString, validateSync } from 'class-validator'
-import { plainToInstance } from 'class-transformer'
 import { config } from 'dotenv'
+import { plainToInstance } from 'class-transformer'
+import { IsNumber, IsString, validateSync } from 'class-validator'
 
 config({
   path: '.env',

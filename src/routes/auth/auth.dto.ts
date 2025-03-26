@@ -1,4 +1,6 @@
 import { IsEmail, IsString, Length } from 'class-validator'
+
+import { SuccessResDTO } from 'src/shared/shared.dto'
 import { Match } from 'src/shared/decorators/custom-validator.decorator'
 
 export class LoginBodyDTO {
@@ -9,12 +11,30 @@ export class LoginBodyDTO {
   password: string
 }
 
-export class LoginResDTO {
+// export class LoginData {
+//   accessToken: string
+//   refreshToken: string
+
+//   constructor(partial: Partial<LoginData>) {
+//     Object.assign(this, partial)
+//   }
+// }
+// export class LoginResDTO extends SuccessResDTO<LoginData> {
+//   @Type(() => LoginData)
+//   declare data: LoginData
+
+//   constructor(partial: Partial<LoginResDTO>) {
+//     super(partial)
+//     Object.assign(this, partial)
+//   }
+// }
+
+export class LoginResDTO extends SuccessResDTO<{
   accessToken: string
   refreshToken: string
-
-  constructor(partial: Partial<LoginResDTO>) {
-    Object.assign(this, partial)
+}> {
+  constructor(data: LoginResDTO) {
+    super(data)
   }
 }
 
@@ -28,8 +48,8 @@ export class RegisterBodyDTO extends LoginBodyDTO {
 }
 
 export class RegisterResDTO extends LoginResDTO {
-  constructor(partial: Partial<RegisterResDTO>) {
-    super(partial)
+  constructor(data: RegisterResDTO) {
+    super(data)
   }
 }
 
@@ -39,8 +59,8 @@ export class RefreshTokenBodyDTO {
 }
 
 export class RefreshTokenResDTO extends LoginResDTO {
-  constructor(partial: Partial<RefreshTokenResDTO>) {
-    super(partial)
+  constructor(data: RefreshTokenResDTO) {
+    super(data)
   }
 }
 

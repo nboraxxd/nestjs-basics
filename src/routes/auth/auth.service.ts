@@ -2,7 +2,13 @@ import { Injectable, UnprocessableEntityException, UnauthorizedException } from 
 
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { LoginBodyDTO, LogoutBodyDTO, RefreshTokenBodyDTO, RegisterBodyDTO } from 'src/routes/auth/auth.dto'
+import {
+  LoginBodyDTO,
+  LoginResDTO,
+  LogoutBodyDTO,
+  RefreshTokenBodyDTO,
+  RegisterBodyDTO,
+} from 'src/routes/auth/auth.dto'
 import { TokenService } from 'src/shared/services/token.service'
 import { isJsonWebTokenError, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helper'
 import { MessageResDTO } from 'src/shared/shared.dto'
@@ -69,7 +75,7 @@ export class AuthService {
     }
   }
 
-  async login({ email, password }: LoginBodyDTO) {
+  async login({ email, password }: LoginBodyDTO): Promise<LoginResDTO['data']> {
     const user = await this.prismaService.user.findUnique({ where: { email } })
 
     if (!user) {

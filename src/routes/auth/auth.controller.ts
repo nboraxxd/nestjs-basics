@@ -20,7 +20,7 @@ export class AuthController {
   async register(@Body() body: RegisterBodyDTO) {
     const result = await this.authService.register(body)
 
-    return new RegisterResDTO(result)
+    return new RegisterResDTO({ data: result, message: 'Đăng ký thành công' })
   }
 
   @Post('login')
@@ -28,7 +28,7 @@ export class AuthController {
   async login(@Body() body: LoginBodyDTO) {
     const result = await this.authService.login(body)
 
-    return new LoginResDTO(result)
+    return new LoginResDTO({ data: result, message: 'Đăng nhập thành công' })
   }
 
   @Post('refresh-token')
@@ -36,7 +36,7 @@ export class AuthController {
   async refreshToken(@Body() body: RefreshTokenBodyDTO) {
     const result = await this.authService.refreshToken(body)
 
-    return new RefreshTokenResDTO(result)
+    return new RefreshTokenResDTO({ data: result, message: 'Refresh token thành công' })
   }
 
   @Post('logout')
